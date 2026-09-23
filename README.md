@@ -141,3 +141,7 @@ python rename_files.py
 # 3. trim silence and normalize loudness:
 python normalize_audio.py
 ```
+
+## License
+
+[MIT](LICENSE)
