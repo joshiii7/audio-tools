@@ -106,6 +106,10 @@ def fetch_title(url: str) -> str:
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
+        "noplaylist": True,  # a URL like watch?v=X&list=RD...&start_radio=1 is a
+                             # single video with a radio-mix queue attached; without
+                             # this, yt-dlp treats it as a playlist request and pulls
+                             # every entry in that auto-generated queue.
         "logger": _SilentLogger(),
     }
     with yt_dlp.YoutubeDL(probe_opts) as ydl:
@@ -119,6 +123,8 @@ def download_as_mp3(url: str, output_dir: Path, filename: str) -> None:
     ydl_opts = {
         "format": "bestaudio/best",
         "outtmpl": outtmpl,
+        "noplaylist": True,  # see fetch_title(): download only the linked video,
+                             # not an attached radio-mix queue
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
