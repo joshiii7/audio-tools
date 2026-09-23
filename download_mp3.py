@@ -27,6 +27,27 @@ except ImportError:
 ILLEGAL_FILENAME_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 
 
+class _SilentLogger:
+    """
+    Swallows yt-dlp's own console output entirely. We catch and print our
+    own single, clean error line per URL (see main()); without this, a
+    failed download logs twice — once from yt-dlp's internal reporting,
+    once from our own handler.
+    """
+
+    def debug(self, msg):
+        pass
+
+    def info(self, msg):
+        pass
+
+    def warning(self, msg):
+        pass
+
+    def error(self, msg):
+        pass
+
+
 def check_dependencies() -> None:
     """Fail fast with a clear message if a required tool is missing."""
     missing = []
@@ -81,7 +102,12 @@ def read_links(path: Path) -> list:
 
 def fetch_title(url: str) -> str:
     """Look up a video's title without downloading it."""
-    probe_opts = {"quiet": True, "no_warnings": True, "skip_download": True}
+    probe_opts = {
+        "quiet": True,
+        "no_warnings": True,
+        "skip_download": True,
+        "logger": _SilentLogger(),
+    }
     with yt_dlp.YoutubeDL(probe_opts) as ydl:
         info = ydl.extract_info(url, download=False)
     return info.get("title", "untitled")
@@ -103,6 +129,7 @@ def download_as_mp3(url: str, output_dir: Path, filename: str) -> None:
         "quiet": True,
         "no_warnings": True,
         "noprogress": True,
+        "logger": _SilentLogger(),
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
